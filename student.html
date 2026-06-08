@@ -29,13 +29,12 @@ body{font-family:'Noto Sans KR',sans-serif;background:#f5f5f0;min-height:100vh;p
 .group-price{font-size:12px;color:#1D9E75;font-weight:500;margin-top:2px}
 .group-total-val{font-size:13px;font-weight:500;color:#1a1a18}
 .qty-section{border-top:0.5px solid rgba(0,0,0,0.08);padding-top:10px;margin-top:8px}
-.qty-label{font-size:12px;color:#73726c;margin-bottom:6px}
-.qty-row{display:flex;align-items:center;gap:6px;margin-bottom:5px}
-.qty-row label{font-size:12px;color:#73726c;min-width:30px}
-.qty-input{width:60px;padding:5px 7px;font-size:13px;border:0.5px solid #d3d1c7;border-radius:8px;background:#f5f5f0;color:#1a1a18;text-align:center}
+.qty-row{display:flex;align-items:center;gap:8px;margin-top:10px;padding-top:10px;border-top:0.5px solid rgba(0,0,0,0.08)}
+.qty-row label{font-size:13px;color:#73726c;white-space:nowrap}
+.qty-input{width:70px;padding:6px 8px;font-size:14px;border:0.5px solid #d3d1c7;border-radius:8px;background:#f5f5f0;color:#1a1a18;text-align:center}
 .qty-input:focus{outline:none;border-color:#1D9E75;box-shadow:0 0 0 2px rgba(29,158,117,.12)}
 .qty-input:disabled{opacity:.5}
-.qty-amount{font-size:12px;color:#73726c}
+.qty-amount{font-size:13px;color:#1D9E75;font-weight:500}
 .submit-btn{width:100%;padding:12px;font-size:15px;font-weight:500;background:#1D9E75;color:#fff;border:none;border-radius:8px;cursor:pointer;margin-bottom:6px;transition:background .2s}
 .submit-btn:hover{background:#0F6E56}
 .modify-btn{width:100%;padding:10px;font-size:14px;font-weight:500;background:#f5f5f0;color:#73726c;border:0.5px solid #d3d1c7;border-radius:8px;cursor:pointer;display:none;transition:all .2s}
@@ -165,7 +164,7 @@ function buildGrid() {
   const grid = document.getElementById('groups-grid');
   grid.innerHTML = '';
   groups.forEach(g => {
-    const priceStr = g.price ? `주당 ₩${Number(g.price).toLocaleString()}` : '가격 미설정';
+    const priceStr = g.price ? `개당 ₩${Number(g.price).toLocaleString()}` : '가격 미설정';
     const card = document.createElement('div');
     card.className = 'group-card';
     card.innerHTML = `
@@ -177,14 +176,10 @@ function buildGrid() {
         </div>
         <div class="group-total-val" id="gtotal-${g.id}">₩0</div>
       </div>
-      <div class="qty-section">
-        <div class="qty-label">수량 입력 (최대 3칸)</div>
-        ${[1,2,3].map(n => `
-        <div class="qty-row">
-          <label>${n}번</label>
-          <input class="qty-input" id="q-${g.id}-${n}" type="number" min="0" step="1" placeholder="0" oninput="calcGroup(${g.id})">
-          <span class="qty-amount" id="qa-${g.id}-${n}"></span>
-        </div>`).join('')}
+      <div class="qty-row">
+        <label>수량</label>
+        <input class="qty-input" id="q-${g.id}" type="number" min="0" step="1" placeholder="0" oninput="calcGroup(${g.id})">
+        <span class="qty-amount" id="qa-${g.id}"></span>
       </div>`;
     grid.appendChild(card);
   });
@@ -193,24 +188,20 @@ function buildGrid() {
 window.calcGroup = function(gid) {
   const g = groups.find(x => x.id === gid);
   if (!g) return;
-  let total = 0;
-  [1,2,3].forEach(n => {
-    const v = parseInt(document.getElementById(`q-${gid}-${n}`).value) || 0;
-    const amt = v * (g.price || 0);
-    total += amt;
-    const qa = document.getElementById(`qa-${gid}-${n}`);
-    if (qa) qa.textContent = v > 0 ? `→ ₩${amt.toLocaleString()}` : '';
-  });
+  const v = parseInt(document.getElementById(`q-${gid}`)?.value) || 0;
+  const amt = v * (g.price || 0);
+  const qa = document.getElementById(`qa-${gid}`);
+  if (qa) qa.textContent = v > 0 ? `→ ₩${amt.toLocaleString()}` : '';
   const el = document.getElementById(`gtotal-${gid}`);
-  if (el) el.textContent = total > 0 ? `₩${total.toLocaleString()}` : '₩0';
+  if (el) el.textContent = amt > 0 ? `₩${amt.toLocaleString()}` : '₩0';
   refreshBudget();
 };
 
 function refreshBudget() {
   let total = 0;
-  groups.forEach(g => [1,2,3].forEach(n => {
-    total += (parseInt(document.getElementById(`q-${g.id}-${n}`)?.value) || 0) * (g.price || 0);
-  }));
+  groups.forEach(g => {
+    total += (parseInt(document.getElementById(`q-${g.id}`)?.value) || 0) * (g.price || 0);
+  });
   const remain = BUDGET - total;
   const pct = Math.min(100, (total / BUDGET) * 100);
   document.getElementById('remain-text').textContent =
@@ -223,18 +214,18 @@ function refreshBudget() {
 
 function getTotal() {
   let t = 0;
-  groups.forEach(g => [1,2,3].forEach(n => {
-    t += (parseInt(document.getElementById(`q-${g.id}-${n}`)?.value) || 0) * (g.price || 0);
-  }));
+  groups.forEach(g => {
+    t += (parseInt(document.getElementById(`q-${g.id}`)?.value) || 0) * (g.price || 0);
+  });
   return t;
 }
 
 function setInputsDisabled(dis) {
   ['sid','sname'].forEach(id => { const el = document.getElementById(id); if(el) el.disabled = dis; });
-  groups.forEach(g => [1,2,3].forEach(n => {
-    const el = document.getElementById(`q-${g.id}-${n}`);
+  groups.forEach(g => {
+    const el = document.getElementById(`q-${g.id}`);
     if (el) el.disabled = dis;
-  }));
+  });
 }
 
 window.submitInvestment = async function() {
@@ -250,9 +241,8 @@ window.submitInvestment = async function() {
 
   const investments = {};
   groups.forEach(g => {
-    const qtys = [1,2,3].map(n => parseInt(document.getElementById(`q-${g.id}-${n}`)?.value) || 0);
-    const qty = qtys.reduce((a,b) => a+b, 0);
-    if (qty > 0) investments[g.name] = { qty, amount: qty * (g.price || 0), qtys };
+    const qty = parseInt(document.getElementById(`q-${g.id}`)?.value) || 0;
+    if (qty > 0) investments[g.name] = { qty, amount: qty * (g.price || 0) };
   });
 
   const record = { studentId: sid, studentName: sname, investments, total, timestamp: new Date().toISOString() };
