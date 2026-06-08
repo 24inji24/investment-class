@@ -331,7 +331,7 @@ async function getRecords() {
   } catch(e) { return []; }
 }
 
-async function renderSummary() {
+window.renderSummary = async function() {
   document.getElementById('loading-summary').style.display = 'block';
   document.getElementById('summary-content').style.display = 'none';
   const recs = await getRecords();
@@ -367,7 +367,7 @@ async function renderSummary() {
   document.getElementById('summary-content').style.display = 'block';
 }
 
-async function loadAndRenderDetail() {
+window.loadAndRenderDetail = async function() {
   document.getElementById('loading-detail').style.display = 'block';
   document.getElementById('detail-wrap').style.display = 'none';
   cachedRecords = await getRecords();
