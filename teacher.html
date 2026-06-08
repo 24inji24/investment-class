@@ -122,14 +122,14 @@ tr:last-child td{border-bottom:none}
 </div>
 
 <div id="tab-summary" class="panel" style="display:none">
-  <div style="display:flex;justify-content:flex-end;margin-bottom:0.75rem">
-    <button class="btn" onclick="renderSummary()">🔄 새로고침</button>
-  </div>
   <div id="loading-summary" class="loading">불러오는 중...</div>
   <div id="summary-content" style="display:none">
     <div class="stat-grid" id="stat-grid"></div>
     <div class="card">
-      <h3>모둠별 투자 유치 순위</h3>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+        <h3 style="margin-bottom:0">모둠별 투자 유치 순위</h3>
+        <button class="btn" onclick="renderSummary()" style="font-size:12px;padding:5px 10px">🔄 새로고침</button>
+      </div>
       <div id="ranking-rows"></div>
     </div>
   </div>
@@ -149,7 +149,7 @@ tr:last-child td{border-bottom:none}
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getDatabase, ref, get, set, remove, onValue } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+import { getDatabase, ref, get, set, remove, onValue, query } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyBDuG_U1HcIIYkdgToXDEaIJj1hAYqB8Dg",
@@ -320,12 +320,15 @@ window.saveSetup = async function() {
 };
 
 async function getRecords() {
-  try {
-    const snap = await get(ref(db, `investments/${currentClass.key}`));
-    if (!snap.exists()) return [];
-    const data = snap.val();
-    return Object.values(data).sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-  } catch(e) { return []; }
+  return new Promise((resolve) => {
+    const dbRef = ref(db, `investments/${currentClass.key}`);
+    // onValue로 항상 최신 서버 데이터를 읽음
+    onValue(dbRef, (snap) => {
+      if (!snap.exists()) { resolve([]); return; }
+      const data = snap.val();
+      resolve(Object.values(data).sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp)));
+    }, { onlyOnce: true });
+  });
 }
 
 async function renderSummary() {
