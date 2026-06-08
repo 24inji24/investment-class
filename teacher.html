@@ -122,6 +122,9 @@ tr:last-child td{border-bottom:none}
 </div>
 
 <div id="tab-summary" class="panel" style="display:none">
+  <div style="display:flex;justify-content:flex-end;margin-bottom:0.75rem">
+    <button class="btn" onclick="renderSummary()">🔄 새로고침</button>
+  </div>
   <div id="loading-summary" class="loading">불러오는 중...</div>
   <div id="summary-content" style="display:none">
     <div class="stat-grid" id="stat-grid"></div>
@@ -135,6 +138,7 @@ tr:last-child td{border-bottom:none}
 <div id="tab-detail" class="panel" style="display:none">
   <div style="display:flex;gap:8px;margin-bottom:1rem;flex-wrap:wrap;align-items:center">
     <input class="fi" id="search-q" type="text" placeholder="학번 또는 이름 검색" style="flex:1;min-width:140px;max-width:220px" oninput="renderDetail()">
+    <button class="btn" onclick="loadAndRenderDetail()">🔄 새로고침</button>
     <button class="btn btn-d" onclick="clearAll()">🗑️ 이 반 초기화</button>
   </div>
   <div id="loading-detail" class="loading">불러오는 중...</div>
