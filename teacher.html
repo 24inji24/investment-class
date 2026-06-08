@@ -149,7 +149,7 @@ tr:last-child td{border-bottom:none}
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getDatabase, ref, set, remove, onValue, goOffline, goOnline } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+import { getDatabase, ref, set, remove, onValue } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyBDuG_U1HcIIYkdgToXDEaIJj1hAYqB8Dg",
@@ -322,16 +322,13 @@ window.saveSetup = async function() {
 };
 
 async function getRecords() {
-  return new Promise((resolve) => {
-    goOffline(db);
-    goOnline(db);
-    const dbRef = ref(db, `investments/${currentClass.key}`);
-    onValue(dbRef, (snap) => {
-      if (!snap.exists()) { resolve([]); return; }
-      const data = snap.val();
-      resolve(Object.values(data).sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp)));
-    }, { onlyOnce: true });
-  });
+  try {
+    const url = `https://investment-class-default-rtdb.firebaseio.com/investments/${currentClass.key}.json?t=${Date.now()}`;
+    const res = await fetch(url);
+    const data = await res.json();
+    if (!data) return [];
+    return Object.values(data).sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+  } catch(e) { return []; }
 }
 
 async function renderSummary() {
