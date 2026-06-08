@@ -14,7 +14,6 @@ body{font-family:'Noto Sans KR',sans-serif;background:#f5f5f0;min-height:100vh;p
 .tab{padding:7px 14px;font-size:13px;border:0.5px solid #d3d1c7;border-radius:8px;background:#fff;color:#73726c;cursor:pointer;transition:all .15s}
 .tab.active{background:#1D9E75;color:#fff;border-color:#1D9E75}
 .panel{display:none}
-.panel.active{display:block}
 .card{background:#fff;border:0.5px solid rgba(0,0,0,0.12);border-radius:12px;padding:1.25rem;margin-bottom:1rem}
 .card h3{font-size:15px;font-weight:500;color:#1a1a18;margin-bottom:12px}
 .fi{padding:7px 10px;font-size:13px;border:0.5px solid #d3d1c7;border-radius:8px;background:#f5f5f0;color:#1a1a18}
@@ -28,7 +27,6 @@ body{font-family:'Noto Sans KR',sans-serif;background:#f5f5f0;min-height:100vh;p
 .class-selector{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px;margin-bottom:1rem}
 .class-btn{padding:10px 12px;font-size:13px;font-weight:500;border:0.5px solid #d3d1c7;border-radius:8px;background:#fff;color:#1a1a18;cursor:pointer;transition:all .2s;text-align:left}
 .class-btn:hover{border-color:#1D9E75;color:#1D9E75}
-.class-btn.selected{background:#1D9E75;color:#fff;border-color:#1D9E75}
 .class-label{font-size:11px;opacity:.75;margin-top:2px}
 .class-bar{background:#e1f5ee;border:0.5px solid #5dcaa5;border-radius:8px;padding:10px 14px;margin-bottom:1rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px}
 .class-bar span{font-size:13px;color:#085041;font-weight:500}
@@ -61,7 +59,8 @@ tr:last-child td{border-bottom:none}
 .link-url{font-size:12px;color:#73726c;font-family:monospace;flex:1;word-break:break-all}
 .copy-btn{padding:5px 10px;font-size:12px;border:0.5px solid #d3d1c7;border-radius:8px;background:#fff;color:#1a1a18;cursor:pointer;white-space:nowrap}
 .copy-btn:hover{border-color:#1D9E75;color:#1D9E75}
-.loading{text-align:center;padding:2rem;color:#73726c;font-size:14px}
+.live-dot{display:inline-block;width:8px;height:8px;background:#1D9E75;border-radius:50%;margin-right:6px;animation:pulse 1.5s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
 </style>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500&display=swap" rel="stylesheet">
 </head>
@@ -81,9 +80,9 @@ tr:last-child td{border-bottom:none}
 </div>
 
 <div class="tab-row" id="tab-row" style="display:none">
-  <button class="tab active" onclick="switchTab('setup',this)">⚙️ 수업 설정</button>
-  <button class="tab" onclick="switchTab('summary',this)">📈 투자 현황</button>
-  <button class="tab" onclick="switchTab('detail',this)">📋 학생 내역</button>
+  <button class="tab active" id="tab-btn-setup" onclick="switchTab('setup',this)">⚙️ 수업 설정</button>
+  <button class="tab" id="tab-btn-summary" onclick="switchTab('summary',this)">📈 투자 현황</button>
+  <button class="tab" id="tab-btn-detail" onclick="switchTab('detail',this)">📋 학생 내역</button>
 </div>
 
 <div id="class-select-panel">
@@ -93,7 +92,7 @@ tr:last-child td{border-bottom:none}
   </div>
 </div>
 
-<div id="tab-setup" class="panel active" style="display:none">
+<div id="tab-setup" class="panel" style="display:none">
   <div class="card">
     <h3>모둠 수 설정</h3>
     <div style="display:flex;align-items:center;gap:8px">
@@ -122,27 +121,24 @@ tr:last-child td{border-bottom:none}
 </div>
 
 <div id="tab-summary" class="panel" style="display:none">
-  <div id="loading-summary" class="loading">불러오는 중...</div>
-  <div id="summary-content" style="display:none">
-    <div class="stat-grid" id="stat-grid"></div>
-    <div class="card">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
-        <h3 style="margin-bottom:0">모둠별 투자 유치 순위</h3>
-        <button class="btn" onclick="renderSummary()" style="font-size:12px;padding:5px 10px">🔄 새로고침</button>
-      </div>
-      <div id="ranking-rows"></div>
+  <div class="card">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+      <h3 style="margin-bottom:0"><span class="live-dot"></span>실시간 투자 현황</h3>
     </div>
+    <div class="stat-grid" id="stat-grid">
+      <div class="empty">반을 선택하면 자동으로 표시됩니다</div>
+    </div>
+    <h3 style="margin-bottom:12px">모둠별 투자 유치 순위</h3>
+    <div id="ranking-rows"></div>
   </div>
 </div>
 
 <div id="tab-detail" class="panel" style="display:none">
   <div style="display:flex;gap:8px;margin-bottom:1rem;flex-wrap:wrap;align-items:center">
-    <input class="fi" id="search-q" type="text" placeholder="학번 또는 이름 검색" style="flex:1;min-width:140px;max-width:220px" oninput="renderDetail()">
-    <button class="btn" onclick="loadAndRenderDetail()">🔄 새로고침</button>
+    <input class="fi" id="search-q" type="text" placeholder="학번 또는 이름 검색" style="flex:1;min-width:140px;max-width:220px" oninput="filterDetail()">
     <button class="btn btn-d" onclick="clearAll()">🗑️ 이 반 초기화</button>
   </div>
-  <div id="loading-detail" class="loading">불러오는 중...</div>
-  <div class="card" id="detail-wrap" style="padding:0;overflow:hidden;display:none">
+  <div class="card" style="padding:0;overflow:hidden">
     <div class="tbl-wrap" id="detail-table"></div>
   </div>
 </div>
@@ -164,7 +160,6 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
-const BUDGET = 50000;
 const CLASSES = {
   '203A':{label:'203반',sub:'과제A'},
   '206A':{label:'206반',sub:'과제A'},
@@ -176,10 +171,11 @@ const CLASSES = {
 
 let currentClass = null;
 let cfg = { groupCount: 4, groups: [] };
-let cachedRecords = [];
-let detailUnsubscribe = null;
+// 실시간 리스너 해제 함수 보관
+let unsubscribeInvestments = null;
+let allRecords = [];
 
-// 반 선택 버튼 생성
+// ─── 반 선택 ───────────────────────────────────────
 function buildClassSelector() {
   const el = document.getElementById('class-selector');
   el.innerHTML = '';
@@ -193,6 +189,9 @@ function buildClassSelector() {
 }
 
 async function selectClass(key, info) {
+  // 이전 리스너 해제
+  if (unsubscribeInvestments) { unsubscribeInvestments(); unsubscribeInvestments = null; }
+
   currentClass = { key, ...info };
   document.getElementById('class-select-panel').style.display = 'none';
   document.getElementById('tab-row').style.display = 'flex';
@@ -200,142 +199,62 @@ async function selectClass(key, info) {
   document.getElementById('class-bar-name').textContent = `${info.label} ${info.sub}`;
   document.getElementById('class-bar-key').textContent = '코드: ' + key;
 
-  document.querySelectorAll('.panel').forEach(p => { p.classList.remove('active'); p.style.display = 'none'; });
-  document.getElementById('tab-setup').classList.add('active');
-  document.getElementById('tab-setup').style.display = 'block';
-  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-  document.querySelector('.tab-row .tab').classList.add('active');
-
+  showTab('setup');
   await loadCfg();
   renderSetup();
   renderLinkArea();
+
+  // ★ 핵심: 투자 데이터에 실시간 리스너 연결
+  startListening();
 }
 
 window.changeClass = function() {
+  if (unsubscribeInvestments) { unsubscribeInvestments(); unsubscribeInvestments = null; }
   currentClass = null;
-  if (detailUnsubscribe) { detailUnsubscribe(); detailUnsubscribe = null; }
+  allRecords = [];
   document.getElementById('class-select-panel').style.display = 'block';
   document.getElementById('tab-row').style.display = 'none';
   document.getElementById('class-bar').style.display = 'none';
-  document.querySelectorAll('.panel').forEach(p => { p.classList.remove('active'); p.style.display = 'none'; });
+  document.querySelectorAll('.panel').forEach(p => p.style.display = 'none');
 };
 
-async function loadCfg() {
-  return new Promise((resolve) => {
-    onValue(ref(db, `config/${currentClass.key}`), (snap) => {
-      if (snap.exists() && snap.val().groups) {
-        cfg = snap.val();
-        document.getElementById('gc-input').value = cfg.groupCount || cfg.groups.length;
-      } else {
-        cfg = { groupCount: 4, groups: [
-          {id:1,name:'1모둠',desc:'',price:0},
-          {id:2,name:'2모둠',desc:'',price:0},
-          {id:3,name:'3모둠',desc:'',price:0},
-          {id:4,name:'4모둠',desc:'',price:0},
-        ]};
-        document.getElementById('gc-input').value = 4;
-      }
-      resolve();
-    }, { onlyOnce: true });
+// ─── 실시간 리스너 ─────────────────────────────────
+function startListening() {
+  const investRef = ref(db, `investments/${currentClass.key}`);
+  // onValue는 데이터가 바뀔 때마다 자동 호출됨
+  unsubscribeInvestments = onValue(investRef, (snap) => {
+    if (!snap.exists()) {
+      allRecords = [];
+    } else {
+      allRecords = Object.values(snap.val())
+        .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+    }
+    // 현재 열려있는 탭 자동 업데이트
+    const summaryVisible = document.getElementById('tab-summary').style.display !== 'none';
+    const detailVisible  = document.getElementById('tab-detail').style.display  !== 'none';
+    if (summaryVisible) drawSummary();
+    if (detailVisible)  drawDetail();
   });
+}
+
+// ─── 탭 전환 ──────────────────────────────────────
+function showTab(t) {
+  document.querySelectorAll('.panel').forEach(p => p.style.display = 'none');
+  document.querySelectorAll('.tab').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + t).style.display = 'block';
+  const btn = document.getElementById('tab-btn-' + t);
+  if (btn) btn.classList.add('active');
 }
 
 window.switchTab = function(t, btn) {
-  document.querySelectorAll('.tab').forEach(b => b.classList.remove('active'));
-  document.querySelectorAll('.panel').forEach(p => { p.classList.remove('active'); p.style.display = 'none'; });
-  btn.classList.add('active');
-  document.getElementById('tab-' + t).classList.add('active');
-  document.getElementById('tab-' + t).style.display = 'block';
-  if (t === 'summary') renderSummary();
-  if (t === 'detail') loadAndRenderDetail();
+  showTab(t);
+  if (t === 'summary') drawSummary();
+  if (t === 'detail')  drawDetail();
 };
 
-window.applyGroupCount = function() {
-  const n = Math.min(8, Math.max(2, parseInt(document.getElementById('gc-input').value) || 4));
-  cfg.groupCount = n;
-  while (cfg.groups.length < n) cfg.groups.push({id: cfg.groups.length + 1, name: (cfg.groups.length + 1) + '모둠', desc: '', price: 0});
-  cfg.groups = cfg.groups.slice(0, n);
-  renderSetup();
-};
-
-function renderSetup() {
-  const list = document.getElementById('group-config-list');
-  list.innerHTML = '';
-  cfg.groups.forEach((g, i) => {
-    list.innerHTML += `<div class="group-config-item">
-      <div class="r1">
-        <span class="gnum">${i+1}모둠</span>
-        <input class="fi" id="gn-${i}" type="text" value="${g.name || (i+1)+'모둠'}" placeholder="모둠 이름" style="width:100px">
-        <input class="fi" id="gd-${i}" type="text" value="${g.desc || ''}" placeholder="상품 이름" style="flex:1;min-width:100px">
-      </div>
-      <div class="r2">
-        <label style="font-size:12px;color:#73726c;min-width:60px">개당 금액</label>
-        <input class="fi" id="gp-${i}" type="number" min="0" step="100" value="${g.price || 0}" style="width:100px">
-        <span style="font-size:12px;color:#73726c">원</span>
-      </div>
-    </div>`;
-  });
-}
-
-function renderLinkArea() {
-  if (!currentClass) { document.getElementById('link-area').innerHTML = ''; return; }
-  const base = location.href.replace('teacher.html', 'student.html').split('?')[0];
-  const url = base + '?class=' + currentClass.key;
-  document.getElementById('link-area').innerHTML = `
-    <div style="font-size:13px;color:#73726c;margin-bottom:4px">
-      <strong style="font-weight:500;color:#1a1a18">${currentClass.label} ${currentClass.sub}</strong> 학생 링크
-    </div>
-    <div class="link-box">
-      <span class="link-url">${url}</span>
-      <button class="copy-btn" onclick="copyLink('${url}',this)">📋 복사</button>
-    </div>
-    <p style="font-size:12px;color:#73726c;margin-top:6px">위 링크를 카카오톡이나 클래스룸으로 학생들에게 보내주세요.</p>
-  `;
-}
-
-window.copyLink = function(url, btn) {
-  navigator.clipboard.writeText(url).then(() => {
-    btn.textContent = '✅ 복사됨';
-    setTimeout(() => btn.textContent = '📋 복사', 2000);
-  });
-};
-
-window.saveSetup = async function() {
-  cfg.groups.forEach((g, i) => {
-    const n = document.getElementById('gn-' + i);
-    const d = document.getElementById('gd-' + i);
-    const p = document.getElementById('gp-' + i);
-    if (n) g.name = n.value.trim() || (i+1) + '모둠';
-    if (d) g.desc = d.value.trim();
-    if (p) g.price = parseInt(p.value) || 0;
-  });
-  cfg.groupCount = cfg.groups.length;
-  try {
-    await set(ref(db, `config/${currentClass.key}`), cfg);
-    const ok = document.getElementById('save-ok');
-    ok.textContent = '✅ 저장되었습니다!';
-    setTimeout(() => ok.textContent = '', 2000);
-    renderLinkArea();
-  } catch(e) {
-    alert('저장 실패. 인터넷 연결을 확인해주세요.');
-  }
-};
-
-async function getRecords() {
-  try {
-    const url = `https://investment-class-default-rtdb.firebaseio.com/investments/${currentClass.key}.json?t=${Date.now()}`;
-    const res = await fetch(url);
-    const data = await res.json();
-    if (!data) return [];
-    return Object.values(data).sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-  } catch(e) { return []; }
-}
-
-window.renderSummary = async function() {
-  document.getElementById('loading-summary').style.display = 'block';
-  document.getElementById('summary-content').style.display = 'none';
-  const recs = await getRecords();
-  cachedRecords = recs;
+// ─── 투자 현황 그리기 ──────────────────────────────
+function drawSummary() {
+  const recs = allRecords;
   const totalS = recs.length;
   const totalA = recs.reduce((s, r) => s + r.total, 0);
   const avg = totalS ? Math.round(totalA / totalS) : 0;
@@ -358,34 +277,24 @@ window.renderSummary = async function() {
     html += `<div class="rank-row">
       <span class="rank-no">${i+1}</span>
       <span class="rank-name">${g.name}</span>
-      <div class="rank-bar-wrap"><div class="rank-bar" style="width:${pct}%"><span>${g.desc || ''}</span></div></div>
+      <div class="rank-bar-wrap"><div class="rank-bar" style="width:${pct}%"><span>${g.desc||''}</span></div></div>
       <span class="rank-amt">₩${g.total.toLocaleString()}</span>
     </div>`;
   });
   document.getElementById('ranking-rows').innerHTML = html || '<div class="empty">아직 데이터가 없습니다</div>';
-  document.getElementById('loading-summary').style.display = 'none';
-  document.getElementById('summary-content').style.display = 'block';
 }
 
-window.loadAndRenderDetail = async function() {
-  document.getElementById('loading-detail').style.display = 'block';
-  document.getElementById('detail-wrap').style.display = 'none';
-  cachedRecords = await getRecords();
-  document.getElementById('loading-detail').style.display = 'none';
-  document.getElementById('detail-wrap').style.display = 'block';
-  renderDetail();
-}
-
-window.renderDetail = function() {
-  const q = (document.getElementById('search-q') || {}).value || '';
-  const recs = cachedRecords.filter(r => !q || (r.studentId + r.studentName).includes(q));
+// ─── 학생 내역 그리기 ──────────────────────────────
+function drawDetail() {
+  const q = document.getElementById('search-q')?.value || '';
+  const recs = allRecords.filter(r => !q || (r.studentId + r.studentName).includes(q));
   let html = `<table><thead><tr>
     <th style="width:70px">학번</th><th style="width:65px">이름</th>
     ${cfg.groups.map(g => `<th style="width:80px">${g.name}</th>`).join('')}
     <th style="width:75px">합계</th><th style="width:42px"></th>
   </tr></thead><tbody>`;
   if (!recs.length) {
-    html += `<tr><td colspan="${4 + cfg.groups.length}"><div class="empty">데이터가 없습니다</div></td></tr>`;
+    html += `<tr><td colspan="${4+cfg.groups.length}"><div class="empty">데이터가 없습니다</div></td></tr>`;
   } else {
     recs.forEach(r => {
       html += `<tr><td>${r.studentId}</td><td style="font-weight:500">${r.studentName}</td>`;
@@ -400,14 +309,103 @@ window.renderDetail = function() {
   }
   html += '</tbody></table>';
   document.getElementById('detail-table').innerHTML = html;
+}
+
+window.filterDetail = function() { drawDetail(); };
+
+// ─── 설정 ──────────────────────────────────────────
+async function loadCfg() {
+  return new Promise((resolve) => {
+    onValue(ref(db, `config/${currentClass.key}`), (snap) => {
+      if (snap.exists() && snap.val().groups) {
+        cfg = snap.val();
+        document.getElementById('gc-input').value = cfg.groupCount || cfg.groups.length;
+      } else {
+        cfg = { groupCount:4, groups:[
+          {id:1,name:'1모둠',desc:'',price:0},{id:2,name:'2모둠',desc:'',price:0},
+          {id:3,name:'3모둠',desc:'',price:0},{id:4,name:'4모둠',desc:'',price:0},
+        ]};
+        document.getElementById('gc-input').value = 4;
+      }
+      resolve();
+    }, { onlyOnce: true });
+  });
+}
+
+window.applyGroupCount = function() {
+  const n = Math.min(8, Math.max(2, parseInt(document.getElementById('gc-input').value)||4));
+  cfg.groupCount = n;
+  while (cfg.groups.length < n) cfg.groups.push({id:cfg.groups.length+1,name:(cfg.groups.length+1)+'모둠',desc:'',price:0});
+  cfg.groups = cfg.groups.slice(0, n);
+  renderSetup();
+};
+
+function renderSetup() {
+  const list = document.getElementById('group-config-list');
+  list.innerHTML = '';
+  cfg.groups.forEach((g, i) => {
+    list.innerHTML += `<div class="group-config-item">
+      <div class="r1">
+        <span class="gnum">${i+1}모둠</span>
+        <input class="fi" id="gn-${i}" type="text" value="${g.name||(i+1)+'모둠'}" placeholder="모둠 이름" style="width:100px">
+        <input class="fi" id="gd-${i}" type="text" value="${g.desc||''}" placeholder="상품 이름" style="flex:1;min-width:100px">
+      </div>
+      <div class="r2">
+        <label style="font-size:12px;color:#73726c;min-width:60px">개당 금액</label>
+        <input class="fi" id="gp-${i}" type="number" min="0" step="100" value="${g.price||0}" style="width:100px">
+        <span style="font-size:12px;color:#73726c">원</span>
+      </div>
+    </div>`;
+  });
+}
+
+function renderLinkArea() {
+  if (!currentClass) { document.getElementById('link-area').innerHTML=''; return; }
+  const base = location.href.replace('teacher.html','student.html').split('?')[0];
+  const url = base + '?class=' + currentClass.key;
+  document.getElementById('link-area').innerHTML = `
+    <div style="font-size:13px;color:#73726c;margin-bottom:4px">
+      <strong style="font-weight:500;color:#1a1a18">${currentClass.label} ${currentClass.sub}</strong> 학생 링크
+    </div>
+    <div class="link-box">
+      <span class="link-url">${url}</span>
+      <button class="copy-btn" onclick="copyLink('${url}',this)">📋 복사</button>
+    </div>
+    <p style="font-size:12px;color:#73726c;margin-top:6px">위 링크를 카카오톡이나 클래스룸으로 학생들에게 보내주세요.</p>
+  `;
+}
+
+window.copyLink = function(url, btn) {
+  navigator.clipboard.writeText(url).then(() => {
+    btn.textContent = '✅ 복사됨';
+    setTimeout(() => btn.textContent = '📋 복사', 2000);
+  });
+};
+
+window.saveSetup = async function() {
+  cfg.groups.forEach((g, i) => {
+    const n=document.getElementById('gn-'+i);
+    const d=document.getElementById('gd-'+i);
+    const p=document.getElementById('gp-'+i);
+    if(n) g.name=n.value.trim()||(i+1)+'모둠';
+    if(d) g.desc=d.value.trim();
+    if(p) g.price=parseInt(p.value)||0;
+  });
+  cfg.groupCount = cfg.groups.length;
+  try {
+    await set(ref(db, `config/${currentClass.key}`), cfg);
+    const ok = document.getElementById('save-ok');
+    ok.textContent = '✅ 저장되었습니다!';
+    setTimeout(() => ok.textContent='', 2000);
+    renderLinkArea();
+  } catch(e) { alert('저장 실패. 인터넷 연결을 확인해주세요.'); }
 };
 
 window.delRecord = async function(sid) {
   if (!confirm('이 학생 내역을 삭제할까요?')) return;
   try {
     await remove(ref(db, `investments/${currentClass.key}/${sid}`));
-    cachedRecords = await getRecords();
-    renderDetail();
+    // allRecords는 onValue 리스너가 자동으로 업데이트함
   } catch(e) { alert('삭제 실패. 다시 시도해주세요.'); }
 };
 
@@ -415,10 +413,6 @@ window.clearAll = async function() {
   if (!confirm('이 반의 모든 투자 데이터를 초기화할까요?')) return;
   try {
     await remove(ref(db, `investments/${currentClass.key}`));
-    cachedRecords = [];
-    renderDetail();
-    const ok = document.getElementById('save-ok');
-    if (ok) { ok.textContent = '✅ 초기화 완료'; setTimeout(() => ok.textContent = '', 2000); }
   } catch(e) { alert('초기화 실패. 다시 시도해주세요.'); }
 };
 
