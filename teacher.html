@@ -149,7 +149,7 @@ tr:last-child td{border-bottom:none}
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getDatabase, ref, get, set, remove, onValue, query } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+import { getDatabase, ref, set, remove, onValue, goOffline, goOnline } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyBDuG_U1HcIIYkdgToXDEaIJj1hAYqB8Dg",
@@ -221,21 +221,23 @@ window.changeClass = function() {
 };
 
 async function loadCfg() {
-  try {
-    const snap = await get(ref(db, `config/${currentClass.key}`));
-    if (snap.exists() && snap.val().groups) {
-      cfg = snap.val();
-      document.getElementById('gc-input').value = cfg.groupCount || cfg.groups.length;
-      return;
-    }
-  } catch(e) {}
-  cfg = { groupCount: 4, groups: [
-    {id:1,name:'1모둠',desc:'',price:0},
-    {id:2,name:'2모둠',desc:'',price:0},
-    {id:3,name:'3모둠',desc:'',price:0},
-    {id:4,name:'4모둠',desc:'',price:0},
-  ]};
-  document.getElementById('gc-input').value = 4;
+  return new Promise((resolve) => {
+    onValue(ref(db, `config/${currentClass.key}`), (snap) => {
+      if (snap.exists() && snap.val().groups) {
+        cfg = snap.val();
+        document.getElementById('gc-input').value = cfg.groupCount || cfg.groups.length;
+      } else {
+        cfg = { groupCount: 4, groups: [
+          {id:1,name:'1모둠',desc:'',price:0},
+          {id:2,name:'2모둠',desc:'',price:0},
+          {id:3,name:'3모둠',desc:'',price:0},
+          {id:4,name:'4모둠',desc:'',price:0},
+        ]};
+        document.getElementById('gc-input').value = 4;
+      }
+      resolve();
+    }, { onlyOnce: true });
+  });
 }
 
 window.switchTab = function(t, btn) {
@@ -321,8 +323,9 @@ window.saveSetup = async function() {
 
 async function getRecords() {
   return new Promise((resolve) => {
+    goOffline(db);
+    goOnline(db);
     const dbRef = ref(db, `investments/${currentClass.key}`);
-    // onValue로 항상 최신 서버 데이터를 읽음
     onValue(dbRef, (snap) => {
       if (!snap.exists()) { resolve([]); return; }
       const data = snap.val();
