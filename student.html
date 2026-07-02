@@ -52,7 +52,7 @@ body{font-family:'Noto Sans KR',sans-serif;background:#f5f5f0;min-height:100vh;p
 <div class="header">
   <div id="class-chip-area"></div>
   <h1>📈 모둠 투자 수업</h1>
-  <p>5만원을 모둠 상품에 배분해 투자하세요</p>
+  <p>10만원을 모둠 상품에 배분해 투자하세요</p>
 </div>
 
 <div id="no-class-card" class="no-class-card" style="display:none">
@@ -69,8 +69,8 @@ body{font-family:'Noto Sans KR',sans-serif;background:#f5f5f0;min-height:100vh;p
 
   <div class="card">
     <div class="budget-top">
-      <span class="budget-total">예산 ₩50,000</span>
-      <span class="budget-remain" id="remain-text">잔액 ₩50,000</span>
+      <span class="budget-total">예산 ₩100,000</span>
+      <span class="budget-remain" id="remain-text">잔액 ₩100,000</span>
     </div>
     <div class="progress-track"><div class="progress-fill" id="progress" style="width:0%"></div></div>
   </div>
@@ -106,7 +106,7 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
-const BUDGET = 50000;
+const BUDGET = 100000;
 const CLASSES = {
   '203A':{label:'203반',sub:'과제A'},
   '206A':{label:'206반',sub:'과제A'},
@@ -242,7 +242,7 @@ window.submitInvestment = async function() {
   if (!sname) { err.textContent = '이름을 입력해주세요.'; return; }
   const total = getTotal();
   if (total === 0) { err.textContent = '최소 하나의 모둠에 투자해주세요.'; return; }
-  if (total > BUDGET) { err.textContent = '투자 총액이 예산(₩50,000)을 초과했습니다.'; return; }
+  if (total > BUDGET) { err.textContent = '투자 총액이 예산(₩100,000)을 초과했습니다.'; return; }
   err.textContent = '';
 
   const investments = {};
